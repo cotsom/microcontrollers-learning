@@ -1,3 +1,5 @@
+#include <OLED_I2C.h>
+
 #include "OLED_I2C.h"           // подключаем библиотеку для экрана
 OLED myOLED(SDA, SCL, 8);  // создаем объект myOLED
 
@@ -35,6 +37,24 @@ public:
                      myOLED.clrScr();
                      myOLED.print("GAME OVER ", CENTER, 30);
                      myOLED.print(String(points) + " points!", CENTER, 48);
+                     myOLED.update();
+                     while(true){
+                      if(analogRead(A0)< 512 && analogRead(A1) < 512){
+                        gameStatus = true;
+                         LeastStepsPlatform = 0;
+                         nowPosPlatform     = 0;
+                        
+                         gameStatus        = true;     
+                      
+                         LeastSteps_onX_Ball  = 100;
+                         nowPosX_Ball         = 0;
+                      
+                         LeastSteps_onY_Ball = 45;
+                         nowPosY_Ball     = 0;
+                         points = 0;
+                         break;
+                      }
+                     }
 
         
           }
@@ -74,6 +94,7 @@ public:
            }
            
           myOLED.print("*", nowPosX_Ball, nowPosY_Ball);
+          myOLED.print(String(points), 0, 0);
            
     }
 
