@@ -17,6 +17,7 @@ CRGB leds[NUM_LEDS];
 
 int rainbowFlag = 0;
 int blinkFlag = 0;
+int glowFlag = 0;
 
 // WiFi
 const char *ssid = "Potee_2G"; // Enter your WiFi name
@@ -81,7 +82,55 @@ void callback(char *topic, byte *payload, unsigned int length) {
      Serial.print((char) payload[i]);
      _message.concat((char) payload[i]);
  }
- 
+
+  /*
+ switch(_message){
+   case "green":
+      rainbowFlag = 0;
+      for(int i = 0; i < NUM_LEDS; i++) {
+        leds[i] = CHSV(255, 255, 255);
+      }
+      FastLED.show();
+      break;
+      
+   case "pink":
+      rainbowFlag = 0;
+      for(int i = 0; i < NUM_LEDS; i++) {
+        leds[i] = CHSV(128, 255, 255);
+      }
+      FastLED.show();
+      break;
+
+   case "blue":
+      rainbowFlag = 0;
+      for(int i = 0; i < NUM_LEDS; i++) {
+        leds[i] = CHSV(160, 255, 255);
+      }
+      FastLED.show();
+      break;
+
+   case "white":
+      rainbowFlag = 0;
+      for(int i = 0; i < NUM_LEDS; i++) {
+        leds[i] = CHSV(100, 0, 255);
+      }
+      FastLED.show();
+      break;
+
+   case "rainbow":
+      rainbowFlag = 1;
+      break;
+
+   case "blink":
+      blinkFlag = 1;
+      break;
+
+   case "stop":
+      rainbowFlag = 0;
+      break;
+      
+ }
+ */
  if(_message == "green"){
   rainbowFlag = 0;
   for(int i = 0; i < NUM_LEDS; i++) {
@@ -89,33 +138,52 @@ void callback(char *topic, byte *payload, unsigned int length) {
   }
     FastLED.show(); 
 
- }else if(_message == "purple"){
+ }
+ 
+ if(_message == "pink"){
   rainbowFlag = 0;
   for(int i = 0; i < NUM_LEDS; i++) {
     leds[i] = CHSV(128, 255, 255);
   }
     FastLED.show(); 
 
- }else if(_message == "blue"){
+ }
+ 
+ if(_message == "blue"){
   rainbowFlag = 0;
   for(int i = 0; i < NUM_LEDS; i++) {
-    leds[i] = CHSV(160, 255, 255);
+    leds[i] = CHSV(180, 255, 255);
   }
     FastLED.show(); 
 
- }else if(_message == "white"){
+ }
+ 
+ if(_message == "white"){
   rainbowFlag = 0;
   for(int i = 0; i < NUM_LEDS; i++) {
     leds[i] = CHSV(100, 0, 255);
   }
     FastLED.show(); 
 
- }else if(_message == "rainbow"){
+ }
+ 
+ if(_message == "rainbow"){
+  glowFlag = 0;
   rainbowFlag = 1;
- }else if(_message == "stop"){
-  rainbowFlag = 0;
- }else if(_message == "blink"){
+ }
+ 
+ if(_message == "blink"){
   blinkFlag = 1;
+ }
+
+ if(_message == "glow"){
+  rainbowFlag = 0;
+  glowFlag = 1;
+ }
+ 
+ if(_message == "stop"){
+  rainbowFlag = 0;
+  glowFlag = 0;
  }
 
  
@@ -164,20 +232,37 @@ void loop() {
  if (blinkFlag){
   for(int i = 0; i < 2; i++){
     for(int i = 0; i < NUM_LEDS; i++) {
-      leds[i] = CHSV(0, 0, 0);
+      leds[i] = CHSV(128, 255, 255);
     }
     FastLED.show();
     fadeall();
     delay(110);
 
     for(int i = 0; i < NUM_LEDS; i++) {
-      leds[i] = CHSV(255, 255, 255);
+      leds[i] = CHSV(180, 255, 255);
     }
     FastLED.show();
     fadeall();
     delay(110);
   }
   blinkFlag = 0;
+ }
+
+ if (glowFlag){
+    static uint8_t hue = 0;
+    for(int i = 0; i < NUM_LEDS; i++) {
+      leds[i] = CHSV(hue++, 255, 255);
+    }
+    FastLED.show(); 
+    fadeall();
+    delay(350);
+  
+    for(int i = (NUM_LEDS)-1; i >= 0; i--) {
+      leds[i] = CHSV(hue++, 255, 255);
+    }
+    FastLED.show();
+    fadeall();
+    delay(350);
  }
  
 }
