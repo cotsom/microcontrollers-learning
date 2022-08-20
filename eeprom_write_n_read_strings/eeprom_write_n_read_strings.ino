@@ -1,6 +1,7 @@
 #include "EEPROM.h"
 
 int addr = 0;
+int addrForPass;
 #define EEPROM_SIZE 64
 
 // the sample text which we are storing in EEPROM
