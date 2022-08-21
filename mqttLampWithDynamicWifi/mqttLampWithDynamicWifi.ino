@@ -3,6 +3,8 @@
 #include <WebServer.h>
 #include <FastLED.h>
 #include <PubSubClient.h>
+#include "EEPROM.h"
+
 
 //----------------------Led--------------------------------------------
 // How many leds in your strip?
@@ -31,6 +33,16 @@ const int mqtt_port = 9124;
 
 WiFiClient espClient;
 PubSubClient client(espClient);
+
+//EEPROM
+int addr = 0;
+int addrForPass;
+#define EEPROM_SIZE 256
+String savedSsid;
+String savedPassword;
+
+int wifiDelay = 0;
+int wifiPointSetupFlag = 0;
 
 
 int captiveFlag = 1;
@@ -72,6 +84,9 @@ void handleForm() {
   
    Serial.print("password:");
    Serial.println(password);
+
+   writeToEEPROM(ssid, password);
+   
    captiveFlag = 0;
    webServer.stop();
    webServer.close();
@@ -105,6 +120,73 @@ void wifiPointSetup(){
     webServer.handleClient();
   }
 }
+
+void eepromSetup(){
+    Serial.println("starting now...");
+
+    if (!EEPROM.begin(EEPROM_SIZE)) {
+        Serial.println("failed to init EEPROM");
+        delay(1000000);
+    }
+}
+
+void writeToEEPROM(String ssid, String password){
+  //Serial.print("Было записано");
+  //Serial.println(ssid);
+  //Serial.println(password);
+  addr = 0;
+  // writing byte-by-byte to EEPROM
+    for (int i = 0; i < ssid.length(); i++) {
+        EEPROM.write(i, ssid[i]);
+        addr += 1;
+    }
+    EEPROM.write(addr, '\0');
+    addr++;
+    addrForPass = addr;
+
+    //Serial.print("write from");
+    //Serial.println(addr);
+    for (int i = 0; i < password.length(); i++) {
+        EEPROM.write(addr, password[i]);
+        addr += 1;
+    }
+    EEPROM.write(addr, '\0');
+    EEPROM.commit();
+}
+
+void readFromEEPROM(){
+  addr = 0;
+  for (int i = 0; i < EEPROM_SIZE; i++) {
+        byte ssidEEPROM = EEPROM.read(i);
+
+        if (ssidEEPROM == '\0') {
+            addr = i+1;
+            addrForPass = addr;
+            break;
+        }
+        savedSsid += char(ssidEEPROM);
+        addr = i+1;
+        addrForPass = addr;
+    }
+    //Serial.println(addrForPass);
+    //Serial.print("ssid from EEPROM: ");
+    //Serial.println(savedSsid);
+
+    //Serial.print("read from");
+    //Serial.println(addrForPass);
+    for (int i = addrForPass; i < EEPROM_SIZE; i++) {
+        byte passwordEEPROM = EEPROM.read(i);
+
+        if (passwordEEPROM == '\0') {
+            break;
+            addr = i+1;
+        }
+  
+        savedPassword += char(passwordEEPROM);
+    }
+    //Serial.print("password from EEPROM: ");
+    //Serial.print(savedPassword);
+}
             
 
 void setup() {
@@ -114,7 +196,24 @@ void setup() {
   FastLED.addLeds<WS2812,DATA_PIN,RGB>(leds,NUM_LEDS);
   FastLED.setBrightness(84);
   
-  wifiPointSetup();
+  //EEPROM
+  eepromSetup();
+  readFromEEPROM();
+  WiFi.begin(savedSsid.c_str(), savedPassword.c_str());
+  while (WiFi.status() != WL_CONNECTED) {
+      if(wifiDelay == 10){
+        wifiPointSetupFlag = 1;
+        break;
+      }
+      delay(1000);
+      wifiDelay++;
+      Serial.println("Connecting to WiFi..");
+  }
+  if(wifiPointSetupFlag){
+    wifiPointSetup();
+  }
+  
+
   WiFi.begin(ssid.c_str(), password.c_str());
   while (WiFi.status() != WL_CONNECTED) {
       delay(500);
@@ -281,13 +380,13 @@ void loop() {
     }
     FastLED.show(); 
     fadeall();
-    delay(350);
+    delay(1550);
   
     for(int i = (NUM_LEDS)-1; i >= 0; i--) {
       leds[i] = CHSV(hue++, 255, 255);
     }
     FastLED.show();
     fadeall();
-    delay(350);
+    delay(1550);
  }
 }

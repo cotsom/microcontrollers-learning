@@ -26,7 +26,7 @@ void setup() {
     }
     EEPROM.write(addr, '\0');
     addr += 1;
-    int addrForPass = addr;
+    addrForPass = addr;
 
     for (int i = 0; i < password.length(); i++) {
         EEPROM.write(addr, password[i]);
